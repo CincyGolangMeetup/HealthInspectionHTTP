@@ -9,6 +9,7 @@ Each team's code will go in a separate directory in that night's repository. At 
 
 How to Use:
 1. Fork the repository.
-2. Create a directory for your pair.
+1. Clone to where you and your partner will code.
+2. Create a directory for you and your partner. Name it something unique!
 3. Complete the task by coding within that directory.
 4. Make a pull request. 
