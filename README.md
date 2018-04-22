@@ -13,3 +13,9 @@ How to Use:
 2. Create a directory for you and your partner. Name it something unique!
 3. Complete the task by coding within that directory.
 4. Make a pull request. 
+
+Here are some resources for the first workshop:
+
+[Explanation of data](https://data.cincinnati-oh.gov/Thriving-Healthy-Neighborhoods/Cincinnati-Food-Safety-Program/rg6p-b3h3)
+
+[And here's information about how to use the API to access records via HTTP request](https://dev.socrata.com/foundry/data.cincinnati-oh.gov/2c8u-zmu9)
