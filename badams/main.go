@@ -1,5 +1,8 @@
 /*
  * badams: Brian Adams
+ *
+ * Usage: go run main.go -t <YOUR_SOCRATA_TOKEN> [-p (Pretty Print) -q BUSINESS_TO_SEARCH_FOR]
+ *
  */
 
 package main
@@ -37,8 +40,6 @@ func main() {
 	} else {
 		fullUrl = baseUrl
 	}
-
-	fmt.Println(fullUrl)
 
 	req, err := http.NewRequest("GET", fullUrl, nil)
 	req.Header.Add("X-App-Token", tokenFlag)
