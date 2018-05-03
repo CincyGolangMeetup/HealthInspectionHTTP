@@ -40,7 +40,7 @@ var httpClient = &http.Client{Timeout: 30 * time.Second}
 
 const (
 	BusinessName = "Kroger"
-	BaseUrl      = "ahttps://data.cincinnati-oh.gov/resource/2c8u-zmu9.json?"
+	BaseUrl      = "https://data.cincinnati-oh.gov/resource/2c8u-zmu9.json?"
 	ResultLimit  = 10
 )
 
@@ -48,16 +48,15 @@ func main() {
 	// use a channel and goroutine because why not...
 	var inspChan = make(chan []Inspection, 1)
 
-	// not sure if we need a sync.WaitGroup here...
+	// TODO: not sure if a WaitGroup has value here...
+	//var wg sync.WaitGroup
+	//wg.Add(1)
 	go GetInspections(inspChan)
+	//wg.Wait()
 
 	var results []Inspection
-	for {
-		if r, ok := <-inspChan; ok {
-			results = r
-		} else {
-			break
-		}
+	if r, ok := <-inspChan; ok {
+		results = r
 	}
 
 	fmt.Println("Total count is", len(results))
@@ -67,6 +66,10 @@ func main() {
 }
 
 func GetInspections(ch chan<- []Inspection) {
+	// make sure we defer so we signal we're done
+	//defer wg.Done()
+	defer close(ch)
+
 	requestUrl := BaseUrl + "$where=" +
 		url.QueryEscape("business_name like '%"+strings.ToUpper(BusinessName)+"%'") +
 		"&$limit=" + fmt.Sprintf("%d", ResultLimit)
@@ -97,5 +100,4 @@ func GetInspections(ch chan<- []Inspection) {
 	}
 
 	ch <- results
-	close(ch)
 }
