@@ -40,7 +40,7 @@ var httpClient = &http.Client{Timeout: 30 * time.Second}
 
 const (
 	BusinessName = "Kroger"
-	BaseUrl      = "https://data.cincinnati-oh.gov/resource/2c8u-zmu9.json?"
+	BaseUrl      = "ahttps://data.cincinnati-oh.gov/resource/2c8u-zmu9.json?"
 	ResultLimit  = 10
 )
 
@@ -48,6 +48,7 @@ func main() {
 	// use a channel and goroutine because why not...
 	var inspChan = make(chan []Inspection, 1)
 
+	// not sure if we need a sync.WaitGroup here...
 	go GetInspections(inspChan)
 
 	var results []Inspection
