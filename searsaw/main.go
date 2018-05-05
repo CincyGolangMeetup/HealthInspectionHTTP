@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
+	"time"
 )
 
 type DataSet []struct {
@@ -32,31 +35,72 @@ type DataSet []struct {
 	ViolationKey         string `json:"violation_key"`
 }
 
+type ApiError struct {
+	Code    string `json:"code"`
+	Error   bool   `json:"error"`
+	Message string `json:"message"`
+	Data    struct {
+		Query string `json:"query"`
+	} `json:"data"`
+}
+
+func createRawQuery(params map[string]string) string {
+	type query url.Values
+	for header, value := params {
+		query.Add(header, value)
+	}
+
+	return query.Encode()
+}
+
+func getTimeout(timeout int) (context.Context, error) {
+	ctx := context.Background()
+	return context.WithTimeout(ctx, timeout*time.Second)
+}
+
 func main() {
-	client := &http.Client{}
 	req, err := http.NewRequest("GET", "https://data.cincinnati-oh.gov/resource/2c8u-zmu9.json", nil)
 	if err != nil {
 		fmt.Printf("There was an error creating the request: %s", err.Error())
 		os.Exit(1)
 	}
 
-	query := req.URL.Query()
-	query.Add("$limit", "20")
-	query.Add("license_status", "'PAID'")
-	query.Add("postal_code", "45202")
-	req.URL.RawQuery = query.Encode()
+	ctx, cancel := getTimeout(1)
+	defer cancel()
+	req.WithContext(ctx)
+
+	req.URL.RawQuery = createRawQuery(map[string]string{
+		"$limit": "20",
+		"license_status": "'PAID'",
+		"postal_code": "45202",
+	})
 
 	fmt.Printf("The URL is %s.\n\n", req.URL)
 
 	req.Header.Add("X-App-Token", os.Getenv("API_TOKEN"))
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		fmt.Printf("There was an error making the request: %s", err.Error())
 		os.Exit(1)
 	}
+	defer resp.Body.Close()
+
+	decoder := json.NewDecoder(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResponse ApiError
+		if err := decoder.Decode(&errorResponse); err != nil {
+			fmt.Printf("There was an error decoding the errored request: %s\n", err.Error())
+		} else {
+			fmt.Printf("The API returned an error - %s\n", errorResponse.Message)
+			fmt.Printf("The SoQL query was '%s'\n", errorResponse.Data.Query)
+		}
+
+		os.Exit(1)
+	}
 
 	var data DataSet
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	if err := decoder.Decode(&data); err != nil {
 		fmt.Printf("There was an error decoding the request: %s\n", err.Error())
 		os.Exit(1)
 	}
