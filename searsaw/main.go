@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 )
@@ -43,6 +44,20 @@ type ApiError struct {
 	} `json:"data"`
 }
 
+func createRawQuery(params map[string]string) string {
+	type query url.Values
+	for header, value := params {
+		query.Add(header, value)
+	}
+
+	return query.Encode()
+}
+
+func getTimeout(timeout int) (context.Context, error) {
+	ctx := context.Background()
+	return context.WithTimeout(ctx, timeout*time.Second)
+}
+
 func main() {
 	req, err := http.NewRequest("GET", "https://data.cincinnati-oh.gov/resource/2c8u-zmu9.json", nil)
 	if err != nil {
@@ -50,17 +65,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	ctx, cancel := getTimeout(1)
 	defer cancel()
 	req.WithContext(ctx)
 
-	query := req.URL.Query()
-	query.Add("$limit", "20")
-	query.Add("license_status", "'PAID'")
-	query.Add("postal_code", "45202")
-	query.Add("$where", "city NOT 'Cincinnati'")
-	req.URL.RawQuery = query.Encode()
+	req.URL.RawQuery = createRawQuery(map[string]string{
+		"$limit": "20",
+		"license_status": "'PAID'",
+		"postal_code": "45202",
+	})
 
 	fmt.Printf("The URL is %s.\n\n", req.URL)
 
