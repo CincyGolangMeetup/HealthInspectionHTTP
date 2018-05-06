@@ -11,12 +11,16 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	inspect "github.com/geneticgrabbag/HealthInspectionHTTP/geneticgrabbag"
 )
 
 const (
 	apiURL = "https://data.cincinnati-oh.gov/resource/2c8u-zmu9.json"
+
+	defaultTimeout = 30 * time.Second
+	defaultLimit   = 10
 )
 
 var (
@@ -39,8 +43,8 @@ type InspectionRepository struct {
 
 var defaultRepository = InspectionRepository{
 	name:   "Default Repository",
-	client: http.DefaultClient,
-	limit:  10,
+	client: &http.Client{Timeout: defaultTimeout},
+	limit:  defaultLimit,
 }
 
 // Name of this repository instance.
@@ -105,6 +109,14 @@ func WithName(name string) InspectionRepositoryOption {
 func WithToken(token string) InspectionRepositoryOption {
 	return func(s *InspectionRepository) error {
 		s.token = token
+		return nil
+	}
+}
+
+// WithTimeout sets the maximum time a request can take before giving up.
+func WithTimeout(timeout time.Duration) InspectionRepositoryOption {
+	return func(s *InspectionRepository) error {
+		s.client.Timeout = timeout
 		return nil
 	}
 }

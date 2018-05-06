@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"time"
 
 	"github.com/geneticgrabbag/HealthInspectionHTTP/geneticgrabbag"
 	fsp "github.com/geneticgrabbag/HealthInspectionHTTP/geneticgrabbag/cincyfsp"
@@ -15,6 +16,7 @@ func main() {
 	dryRunOpt := flag.Bool("dryrun", false, "perform a dry run with example data (no network activity)")
 	limitOpt := flag.Int("limit", 0, "maximum number of inspections to return")
 	tokenOpt := flag.String("token", os.Getenv("API_TOKEN"), "token to authenticate against API")
+	timeoutOpt := flag.Duration("timeout", 5*time.Second, "maximum time to allow for request to complete")
 	flag.Parse()
 
 	// Create the Cincy Foods inspector repository implementation. For a dry
@@ -31,6 +33,7 @@ func main() {
 		repo, err = fsp.NewRepository(
 			fsp.WithName("Real API Data"),
 			fsp.WithToken(*tokenOpt),
+			fsp.WithTimeout(*timeoutOpt),
 			fsp.WithLimit(*limitOpt))
 	}
 	if err != nil {
